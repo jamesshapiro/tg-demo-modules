@@ -24,18 +24,29 @@ terraform {
 # CREATE THE MYSQL DB
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_db_instance" "mysql" {
-  engine         = "mysql"
-  engine_version = "5.6.41"
+# resource "aws_db_instance" "mysql" {
+#   engine         = "mysql"
+#   engine_version = "5.6.41"
 
-  name     = var.name
-  username = var.master_username
-  password = var.master_password
+#   name     = var.name
+#   username = var.master_username
+#   password = var.master_password
 
-  instance_class    = var.instance_class
-  allocated_storage = var.allocated_storage
-  storage_type      = var.storage_type
+#   instance_class    = var.instance_class
+#   allocated_storage = var.allocated_storage
+#   storage_type      = var.storage_type
 
-  # TODO: DO NOT COPY THIS SETTING INTO YOUR PRODUCTION DBS. It's only here to make testing this code easier!
-  skip_final_snapshot = true
+#   # TODO: DO NOT COPY THIS SETTING INTO YOUR PRODUCTION DBS. It's only here to make testing this code easier!
+#   skip_final_snapshot = true
+# }
+
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name           = "terragrunt-test-table"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "PK1"
+
+  attribute {
+    name = "PK1"
+    type = "S"
+  }
 }
