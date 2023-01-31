@@ -41,7 +41,7 @@ terraform {
 # }
 
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name           = "terragrunt-test-table"
+  name           = var.name
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "PK1"
 
