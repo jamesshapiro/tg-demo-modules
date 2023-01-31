@@ -22,26 +22,34 @@ terraform {
   }
 }
 
+resource "aws_sqs_queue" "terraform_queue" {
+  name                      = "terragrunt-example-queue"
+  delay_seconds             = 90
+  max_message_size          = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE ASG
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_autoscaling_group" "webserver_example" {
-  launch_configuration = aws_launch_configuration.webserver_example.id
-  vpc_zone_identifier  = data.aws_subnets.default.ids
+# resource "aws_autoscaling_group" "webserver_example" {
+#   launch_configuration = aws_launch_configuration.webserver_example.id
+#   vpc_zone_identifier  = data.aws_subnets.default.ids
 
-  load_balancers    = [aws_elb.webserver_example.name]
-  health_check_type = "ELB"
+#   load_balancers    = [aws_elb.webserver_example.name]
+#   health_check_type = "ELB"
 
-  min_size = var.min_size
-  max_size = var.max_size
+#   min_size = var.min_size
+#   max_size = var.max_size
 
-  tag {
-    key                 = "Name"
-    value               = var.name
-    propagate_at_launch = true
-  }
-}
+#   tag {
+#     key                 = "Name"
+#     value               = var.name
+#     propagate_at_launch = true
+#   }
+# }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE LAUNCH CONFIGURATION
@@ -51,46 +59,46 @@ resource "aws_autoscaling_group" "webserver_example" {
 # as a variable.
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_launch_configuration" "webserver_example" {
-  image_id        = data.aws_ami.ubuntu.id
-  instance_type   = var.instance_type
-  security_groups = [aws_security_group.asg.id]
+# resource "aws_launch_configuration" "webserver_example" {
+#   image_id        = data.aws_ami.ubuntu.id
+#   instance_type   = var.instance_type
+#   security_groups = [aws_security_group.asg.id]
 
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello, World" > index.html
-              nohup busybox httpd -f -p "${var.server_port}" &
-              EOF
+#   user_data = <<-EOF
+#               #!/bin/bash
+#               echo "Hello, World" > index.html
+#               nohup busybox httpd -f -p "${var.server_port}" &
+#               EOF
 
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
+# data "aws_ami" "ubuntu" {
+#   most_recent = true
+#   owners      = ["099720109477"] # Canonical
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+#   filter {
+#     name   = "virtualization-type"
+#     values = ["hvm"]
+#   }
 
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
+#   filter {
+#     name   = "architecture"
+#     values = ["x86_64"]
+#   }
 
-  filter {
-    name   = "image-type"
-    values = ["machine"]
-  }
+#   filter {
+#     name   = "image-type"
+#     values = ["machine"]
+#   }
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
-  }
-}
+#   filter {
+#     name   = "name"
+#     values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+#   }
+# }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE A SECURITY GROUP FOR THE ASG
@@ -98,43 +106,43 @@ data "aws_ami" "ubuntu" {
 # usage, you should lock the Instances down so they only allow traffic from trusted sources (e.g. the ELB).
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_security_group" "asg" {
-  name = "${var.name}-asg"
-}
+# resource "aws_security_group" "asg" {
+#   name = "${var.name}-asg"
+# }
 
-resource "aws_security_group_rule" "asg_allow_http_inbound" {
-  type              = "ingress"
-  from_port         = var.server_port
-  to_port           = var.server_port
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.asg.id
-}
+# resource "aws_security_group_rule" "asg_allow_http_inbound" {
+#   type              = "ingress"
+#   from_port         = var.server_port
+#   to_port           = var.server_port
+#   protocol          = "tcp"
+#   cidr_blocks       = ["0.0.0.0/0"]
+#   security_group_id = aws_security_group.asg.id
+# }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE AN ELB TO ROUTE TRAFFIC ACROSS THE ASG
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_elb" "webserver_example" {
-  name            = var.name
-  subnets         = data.aws_subnets.default.ids
-  security_groups = [aws_security_group.elb.id]
+# resource "aws_elb" "webserver_example" {
+#   name            = var.name
+#   subnets         = data.aws_subnets.default.ids
+#   security_groups = [aws_security_group.elb.id]
 
-  listener {
-    lb_port           = var.elb_port
-    lb_protocol       = "http"
-    instance_port     = var.server_port
-    instance_protocol = "http"
-  }
+#   listener {
+#     lb_port           = var.elb_port
+#     lb_protocol       = "http"
+#     instance_port     = var.server_port
+#     instance_protocol = "http"
+#   }
 
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 3
-    interval            = 30
-    target              = "HTTP:${var.server_port}/"
-  }
-}
+#   health_check {
+#     healthy_threshold   = 2
+#     unhealthy_threshold = 2
+#     timeout             = 3
+#     interval            = 30
+#     target              = "HTTP:${var.server_port}/"
+#   }
+# }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE A SECURITY GROUP FOR THE ELB
@@ -143,24 +151,24 @@ resource "aws_elb" "webserver_example" {
 # so it only allows traffic to/from trusted sources.
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_security_group" "elb" {
-  name = "${var.name}-elb"
-}
+# resource "aws_security_group" "elb" {
+#   name = "${var.name}-elb"
+# }
 
-resource "aws_security_group_rule" "elb_allow_http_inbound" {
-  type              = "ingress"
-  from_port         = var.elb_port
-  to_port           = var.elb_port
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.elb.id
-}
+# resource "aws_security_group_rule" "elb_allow_http_inbound" {
+#   type              = "ingress"
+#   from_port         = var.elb_port
+#   to_port           = var.elb_port
+#   protocol          = "tcp"
+#   cidr_blocks       = ["0.0.0.0/0"]
+#   security_group_id = aws_security_group.elb.id
+# }
 
-resource "aws_security_group_rule" "elb_allow_all_outbound" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.elb.id
-}
+# resource "aws_security_group_rule" "elb_allow_all_outbound" {
+#   type              = "egress"
+#   from_port         = 0
+#   to_port           = 0
+#   protocol          = "-1"
+#   cidr_blocks       = ["0.0.0.0/0"]
+#   security_group_id = aws_security_group.elb.id
+# }
