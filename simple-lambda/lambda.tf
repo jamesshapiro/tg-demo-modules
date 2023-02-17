@@ -23,12 +23,6 @@ resource "aws_iam_role" "simple-lambda-iam" {
 EOF
 }
 
-variable "lambda_version" {
-    type = string
-    description = "Which version of the lambda code to use"
-    default = data.aws_s3_object.lambda_zip.version_id
-}
-
 resource "aws_iam_role_policy_attachment" "lambda_cloudwatch_logs_policy" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
   role       = aws_iam_role.simple-lambda-iam.name
@@ -40,7 +34,7 @@ resource "aws_lambda_function" "test_lambda" {
     handler       = "function.lambda_handler"
     s3_bucket         = data.aws_s3_object.lambda_zip.id
     s3_key            = data.aws_s3_object.lambda_zip.key
-    s3_object_version = var.lambda_version
+    s3_object_version = coalesce(var.lambda_version, data.aws_s3_object.lambda_zip.version_id)
 
     runtime = "python3.9"
 
