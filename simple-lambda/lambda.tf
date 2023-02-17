@@ -32,7 +32,7 @@ resource "aws_lambda_function" "test_lambda" {
     function_name = "simple-lambda"
     role          = aws_iam_role.simple-lambda-iam.arn
     handler       = "function.lambda_handler"
-    s3_bucket         = data.aws_s3_object.lambda_zip.id
+    s3_bucket         = data.aws_s3_object.lambda_zip.bucket
     s3_key            = data.aws_s3_object.lambda_zip.key
     s3_object_version = coalesce(var.lambda_version, data.aws_s3_object.lambda_zip.version_id)
 
