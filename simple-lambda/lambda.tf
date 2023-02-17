@@ -1,5 +1,5 @@
 data "aws_s3_object" "lambda_zip" {
-  bucket = "athens-lambda-code"
+  bucket = "athens-build-lambda-code"
   key    = "simple-lambda/archive.zip"
 }
 
